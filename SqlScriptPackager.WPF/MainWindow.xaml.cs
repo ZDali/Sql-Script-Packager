@@ -17,6 +17,7 @@ using SqlScriptPackager.WPF.DisplayWrappers;
 using System.Collections;
 using Microsoft.Win32;
 using SqlScriptPackager.Core.Packaging;
+using System.Configuration;
 
 namespace SqlScriptPackager.WPF
 {
@@ -29,6 +30,7 @@ namespace SqlScriptPackager.WPF
 
         private static OpenFileDialog _sqlFileDialog = new OpenFileDialog();
 
+        #region Properties
         public DatabaseConnection DefaultDatabaseConnection
         {
             get;
@@ -51,6 +53,7 @@ namespace SqlScriptPackager.WPF
         {
             get { return scriptListView.SelectedItems; }
         }
+        #endregion
 
         public MainWindow()
         {
@@ -58,7 +61,6 @@ namespace SqlScriptPackager.WPF
             _sqlFileDialog.CheckFileExists = true;
             _sqlFileDialog.Multiselect = true;
 
-            DatabaseConnections = new Collection<DatabaseConnection>();
             Scripts = new ObservableCollection<ScriptWrapper>();
             LoadConnectionStrings();
          
@@ -67,12 +69,15 @@ namespace SqlScriptPackager.WPF
 
         private void LoadConnectionStrings()
         {
-            for (int i = 0; i < 10; i++)
-                this.DatabaseConnections.Add(new DatabaseConnection("Connection " + i.ToString(), i.ToString()));
+            DatabaseConnections = new Collection<DatabaseConnection>();
+
+            foreach (ConnectionStringSettings settings in ConfigurationManager.ConnectionStrings)
+                this.DatabaseConnections.Add(new DatabaseConnection(settings.Name, settings.ConnectionString));
             
             this.DefaultDatabaseConnection = this.DatabaseConnections[0];
         }
 
+        #region Commands
         private void MoveScript_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             int direction = int.Parse(e.Parameter as string);
@@ -177,9 +182,29 @@ namespace SqlScriptPackager.WPF
 
         private void ViewConnectionInfo_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-
+            ViewConnectionInfo infoWindow = new ViewConnectionInfo(this.DatabaseConnections);
+            infoWindow.ShowDialog();
         }
 
+        private void ExecuteScripts_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = this.Scripts.Count > 0;
+        }
+
+        private void ExecuteScripts_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            foreach (ScriptWrapper wrapper in this.Scripts)
+                wrapper.Script.ResetScript();
+
+            ExecutionWindow window = new ExecutionWindow(this.Scripts);
+            window.ShowDialog();
+        }
+
+        private void Close_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            this.Close();
+        }
+        #endregion
     }
 
     public static class Commands
@@ -191,5 +216,6 @@ namespace SqlScriptPackager.WPF
         public static RoutedUICommand SaveScriptPackage = new RoutedUICommand();
         public static RoutedUICommand LoadScriptPackage = new RoutedUICommand();
         public static RoutedUICommand ViewConnectionInfo = new RoutedUICommand();
+        public static RoutedUICommand ExecuteScripts = new RoutedUICommand();
     }    
 }

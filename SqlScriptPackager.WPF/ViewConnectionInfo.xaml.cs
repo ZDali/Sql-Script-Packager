@@ -30,5 +30,10 @@ namespace SqlScriptPackager.WPF
             this.Connections = connections;
             InitializeComponent();
         }
+
+        private void Close_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            this.Close();
+        }
     }
 }

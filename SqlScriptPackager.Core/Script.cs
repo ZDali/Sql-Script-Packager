@@ -50,7 +50,7 @@ namespace SqlScriptPackager.Core
         public virtual string StatusMessage
         {
             get { return _statusMessage; }
-            set { _statusMessage = value; RaiseStatusChanged(); }
+            set { _statusMessage = value; RaiseStatusMessageChanged(); }
         }
 
         public virtual bool IsEnabled
@@ -61,7 +61,9 @@ namespace SqlScriptPackager.Core
         #endregion
 
         public delegate void ScriptChange(Script script);
-        public event ScriptChange StatusInformationChanged;
+        public event ScriptChange StatusMessageChanged;
+        public event ScriptChange StatusChanged;
+        
 
         protected Script(ScriptContentResource resource, DatabaseConnection connection)
         {
@@ -86,14 +88,13 @@ namespace SqlScriptPackager.Core
             try
             {
                 this.ExecuteScriptInternal();
+                this.Status = ScriptStatus.Executed;
             }
             catch (Exception ex) // generally a bad idea
             {
                 this.Status = ScriptStatus.Failed;
                 this.StatusMessage = ex.ToString();
             }
-
-            this.Status = ScriptStatus.Executed;
         }
 
         public virtual void AbortExecution()
@@ -103,16 +104,24 @@ namespace SqlScriptPackager.Core
 
         public virtual void ResetScript()
         {
-            this.Status = ScriptStatus.Disabled;
+            if(this.Status != ScriptStatus.Disabled)
+                this.Status = ScriptStatus.NotExecuted;
+
             this.StatusMessage = string.Empty;
         }
 
         protected abstract void ExecuteScriptInternal();
 
+        protected void RaiseStatusMessageChanged()
+        {
+            if (this.StatusMessageChanged != null)
+                this.StatusMessageChanged(this);
+        }
+
         protected void RaiseStatusChanged()
         {
-            if (this.StatusInformationChanged != null)
-                this.StatusInformationChanged(this);
+            if (this.StatusChanged != null)
+                this.StatusChanged(this);
         }
     }
 }

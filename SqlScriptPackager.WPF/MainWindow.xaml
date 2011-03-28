@@ -10,6 +10,8 @@
         <CommandBinding Command="w:Commands.SaveScriptPackage" CanExecute="SaveScriptPackage_CanExecute" Executed="SaveScriptPackage_Executed" />
         <CommandBinding Command="w:Commands.LoadScriptPackage" Executed="LoadScriptPackage_Executed" />
         <CommandBinding Command="w:Commands.ViewConnectionInfo" Executed="ViewConnectionInfo_Executed" />
+        <CommandBinding Command="w:Commands.ExecuteScripts" Executed="ExecuteScripts_Executed" CanExecute="ExecuteScripts_CanExecute"  />
+        <CommandBinding Command="Close" Executed="Close_Executed" />
     </Window.CommandBindings>
     <Grid>
         <Grid.RowDefinitions>
@@ -23,9 +25,9 @@
                 <MenuItem Header="_Open Script Package" Command="w:Commands.LoadScriptPackage" />
                 <MenuItem Header="_Save Script Package" Command="w:Commands.SaveScriptPackage" />
                 <Separator />
-                <MenuItem Header="E_xit" />
+                <MenuItem Header="E_xit" Command="Close" />
             </MenuItem>
-            <MenuItem Header="_Connection Info" />
+            <MenuItem Header="_Connection Info" Command="w:Commands.ViewConnectionInfo" />
         </Menu>
         <DockPanel  Grid.Row="1" Grid.Column="0">
             <Label Content="Database:" />
@@ -93,7 +95,7 @@
                 <Button Margin="5" Content="Add Custom Script" />
                 <ComboBox Margin="5" ItemsSource="{Binding ElementName=window, Path=CustomScriptProviders}"  />
             </DockPanel>
-            <Button Margin="5" Grid.Column="1" Content="Execute" />
+            <Button Margin="5" Grid.Column="1" Content="Execute" Command="w:Commands.ExecuteScripts" />
         </Grid>
     </Grid>
 </Window>
