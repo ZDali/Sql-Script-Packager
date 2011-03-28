@@ -19,5 +19,11 @@ namespace SqlScriptPackager.Core
         {
 
         }
+
+        public void Add(IEnumerable<Script> scripts)
+        {
+            foreach (Script script in scripts)
+                this.Add(script);
+        }
     }
 }

@@ -27,6 +27,11 @@ namespace SqlScriptPackager.WPF.DisplayWrappers
             set { _script.IsEnabled = value; }
         }
 
+        public Script Script
+        {
+            get { return _script; }
+        }
+
         public ScriptWrapper(Script script)
         {
             this._script = script;

@@ -35,19 +35,10 @@ namespace SqlScriptPackager.Core.Packaging
             protected set;
         }
 
-        public ScriptPackage() : this(null)
+        public ScriptPackage()
         {
-
-        }
-
-        public ScriptPackage(string packageFile)
-        {
+            this.Location = "temporary";
             this.Scripts = new ScriptCollection();
-
-            if (packageFile == null)
-                this.Location = "temporary";
-            else
-                Load(packageFile);
         }
 
         public void Save(string path)
