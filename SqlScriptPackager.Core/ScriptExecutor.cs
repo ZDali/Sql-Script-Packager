@@ -10,7 +10,8 @@ namespace SqlScriptPackager.Core
     {
         private readonly StringBuilder _logger;
 
-        protected ParameterizedThreadStart ExecutionDelegate
+        protected delegate void ExecuteScriptsAction(IEnumerable<Script> script, bool abortOnError);
+        protected ExecuteScriptsAction ExecutionDelegate
         {
             get;
             set;
@@ -21,7 +22,7 @@ namespace SqlScriptPackager.Core
             get { return _logger.ToString(); }
         }
 
-        public delegate void LogChanged();
+        public delegate void LogChanged(string latestMessage);
         public event LogChanged LogUpdated;
 
         public bool IsExecuting
@@ -43,13 +44,19 @@ namespace SqlScriptPackager.Core
 
         public void ExecuteScripts(IEnumerable<Script> scripts)
         {
+            ExecuteScripts(scripts, false);
+        }
+
+        public void ExecuteScripts(IEnumerable<Script> scripts, bool abortOnError)
+        {
             IsExecuting = true;
             ExecutionDelegate = ExecuteScriptsInternal;
-            ExecutionDelegate.BeginInvoke(scripts, ExecuteScriptsCallback, null);
+            ExecutionDelegate.BeginInvoke(scripts, abortOnError, ExecuteScriptsCallback, null);
         }
 
         public void AbortExecution()
         {
+            AppendLogMessage("Execution aborted.");
             this.ExecutionAborted = true;
         }
 
@@ -59,9 +66,8 @@ namespace SqlScriptPackager.Core
             ExecutionDelegate.EndInvoke(result);
         }
 
-        protected void ExecuteScriptsInternal(object scriptsObject)
+        protected void ExecuteScriptsInternal(IEnumerable<Script> scripts, bool abortOnError)
         {
-            IEnumerable<Script> scripts = scriptsObject as IEnumerable<Script>;
             _logger.Clear();
 
             foreach (Script script in scripts)
@@ -76,27 +82,32 @@ namespace SqlScriptPackager.Core
                     continue;
 
                 AppendLogMessage("Executing " + script.ContentResource.Location);
+                AppendLogMessage("Using connection '" + script.Connection.ConnectionName + "'");
                 script.StatusMessageChanged += new Script.ScriptChange(OnScriptStatusUpdated);
                 script.ExecuteScript();
                 script.StatusMessageChanged -= new Script.ScriptChange(OnScriptStatusUpdated);
-            }
-        }
 
-        void script_StatusChanged(Script script)
-        {
-            throw new NotImplementedException();
+                if (script.Status == ScriptStatus.Executed)
+                    AppendLogMessage(script.ContentResource.Location + " executed.");
+                else if (abortOnError)
+                    this.AbortExecution();
+            }
         }
 
         private void AppendLogMessage(string message)
         {
-            _logger.AppendLine(message);
-            RaiseLogUpdated();
+            string messageDateTime = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss") + " - ";
+            string indent = messageDateTime.PadLeft(messageDateTime.Length);
+
+            string logMessage = string.Concat(messageDateTime, message.Replace(Environment.NewLine, Environment.NewLine + indent));
+            _logger.AppendLine(logMessage);
+            RaiseLogUpdated(logMessage);
         }
 
-        private void RaiseLogUpdated()
+        private void RaiseLogUpdated(string latestMessage)
         {
             if (LogUpdated != null)
-                LogUpdated();
+                LogUpdated(latestMessage);
         }
 
         private void OnScriptStatusUpdated(Script script)

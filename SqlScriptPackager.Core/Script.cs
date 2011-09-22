@@ -88,7 +88,12 @@ namespace SqlScriptPackager.Core
             try
             {
                 this.ExecuteScriptInternal();
-                this.Status = ScriptStatus.Executed;
+
+                if (this.Status == ScriptStatus.Executing)
+                {
+                    this.Status = ScriptStatus.Executed;
+                    this.StatusMessage = this.ScriptType + " successfully executed.";
+                }
             }
             catch (Exception ex) // generally a bad idea
             {

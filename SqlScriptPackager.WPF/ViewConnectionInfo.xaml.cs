@@ -29,6 +29,23 @@ namespace SqlScriptPackager.WPF
         {
             this.Connections = connections;
             InitializeComponent();
+            this.ContentRendered += new EventHandler(ViewConnectionInfo_ContentRendered);
+        }
+
+        void ViewConnectionInfo_ContentRendered(object sender, EventArgs e)
+        {
+            this.ContentRendered -= ViewConnectionInfo_ContentRendered;
+            
+            double totalWidth = 0;
+            foreach (GridViewColumn column in connectionGridView.Columns)
+                totalWidth += column.ActualWidth + 7;
+            this.Width = totalWidth;
+        }
+
+
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            base.OnClosing(e);
         }
 
         private void Close_Executed(object sender, ExecutedRoutedEventArgs e)

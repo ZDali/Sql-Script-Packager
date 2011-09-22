@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("SqlScriptPackager.Core")]
+[assembly: AssemblyTitle("SqlScriptPackager.Console")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Microsoft")]
-[assembly: AssemblyProduct("SqlScriptPackager.Core")]
-[assembly: AssemblyCopyright("Copyright © Microsoft 2011")]
+[assembly: AssemblyCompany("American Enterprise")]
+[assembly: AssemblyProduct("SqlScriptPackager.Console")]
+[assembly: AssemblyCopyright("Copyright © American Enterprise 2011")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("168583d8-1a2f-4c2d-b243-9270886f961a")]
+[assembly: Guid("4aa5dd45-dda6-4e08-bba0-4be8852e7722")]
 
 // Version information for an assembly consists of the following four values:
 //

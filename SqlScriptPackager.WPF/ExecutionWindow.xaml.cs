@@ -33,7 +33,7 @@ namespace SqlScriptPackager.WPF
             get { return Executor.Log; }
         }
 
-        protected ScriptExecutor Executor
+        protected SqlScriptPackager.Core.ScriptExecutor Executor
         {
             get;
             set;
@@ -41,12 +41,14 @@ namespace SqlScriptPackager.WPF
 
         public ExecutionWindow(IEnumerable<ScriptWrapper> scripts)
         {
-            this.Executor = new ScriptExecutor();
+            this.Executor = new SqlScriptPackager.Core.ScriptExecutor();
             this.Scripts = scripts;
-            Executor.LogUpdated += new ScriptExecutor.LogChanged(ScriptExecutor_LogUpdated);
+            Executor.LogUpdated += new SqlScriptPackager.Core.ScriptExecutor.LogChanged(ScriptExecutor_LogUpdated);
             InitializeComponent();
             ExecuteScripts();
-        }
+
+            logTextBox.TextChanged += new TextChangedEventHandler(logTextBox_TextChanged);
+        }        
 
         private void ExecuteScripts()
         {
@@ -56,7 +58,7 @@ namespace SqlScriptPackager.WPF
             Executor.ExecuteScripts(extractedScripts);
         }
 
-        private void ScriptExecutor_LogUpdated()
+        private void ScriptExecutor_LogUpdated(string latestMessage)
         {
             RaisePropertyChanged("Log");
         }
@@ -76,6 +78,11 @@ namespace SqlScriptPackager.WPF
         {
             Executor.LogUpdated -= ScriptExecutor_LogUpdated;
             base.OnClosed(e);
+        }
+
+        private void logTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            logTextBox.ScrollToEnd();
         }
 
         private void Close_Executed(object sender, ExecutedRoutedEventArgs e)

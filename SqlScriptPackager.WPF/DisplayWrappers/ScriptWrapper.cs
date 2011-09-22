@@ -20,7 +20,7 @@ namespace SqlScriptPackager.WPF.DisplayWrappers
         public DatabaseConnection Connection
         {
             get { return _script.Connection; }
-            set { _script.Connection = value; }
+            set { _script.Connection = value; RaisePropertyChanged("Connection"); }
         }
 
         public bool IsEnabled
@@ -37,6 +37,11 @@ namespace SqlScriptPackager.WPF.DisplayWrappers
         public string StatusMessage
         {
             get { return _script.StatusMessage; }
+        }
+
+        public string ScriptType
+        {
+            get { return this.Script.ScriptType; }
         }
 
         public Script Script

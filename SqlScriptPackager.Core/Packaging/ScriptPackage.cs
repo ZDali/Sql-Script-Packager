@@ -83,6 +83,7 @@ namespace SqlScriptPackager.Core.Packaging
 
         protected Script ReadScriptXml(XmlReader reader)
         {
+            string scriptLocation = reader[ATTRIBUTE_LOCATION];
             Type scriptType = Type.GetType(reader[ATTRIBUTE_TYPE]);
             Script script = (Script)Activator.CreateInstance(scriptType);
             
@@ -94,7 +95,7 @@ namespace SqlScriptPackager.Core.Packaging
                 if (reader.Name == ELEMENT_CONNECTION)
                     connection = ReadScriptConnectionXml(reader);
                 else if (reader.Name == ELEMENT_DATA)
-                    resource = ReadScriptResourceXml(reader);
+                    resource = ReadScriptResourceXml(reader, scriptLocation);
                 else
                     throw new XmlException("Unrecognized node: " + reader.Name);
             }
@@ -104,9 +105,9 @@ namespace SqlScriptPackager.Core.Packaging
             return script;
         }
 
-        protected PackageScriptResource ReadScriptResourceXml(XmlReader reader)
+        protected PackageScriptResource ReadScriptResourceXml(XmlReader reader, string scriptLocation)
         {
-            return new PackageScriptResource(this, reader[ATTRIBUTE_LOCATION], reader.ReadElementContentAsString());
+            return new PackageScriptResource(this, scriptLocation, reader.ReadElementContentAsString());
         }
 
         protected DatabaseConnection ReadScriptConnectionXml(XmlReader reader)

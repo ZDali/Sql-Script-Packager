@@ -38,12 +38,26 @@ namespace SqlScriptPackager.Core
 
         protected override void ExecuteScriptInternal()
         {
+            ExecuteSqlScript(this.ScriptContents);                            
+        }
+
+        protected void ExecuteSqlScript(string scriptContent)
+        {
             using (SqlConnection connection = this.Connection.CreateSqlConnection())
-            {
+            {                
                 connection.InfoMessage += new SqlInfoMessageEventHandler(OnInfoMessageUpdated);
+
+                Server server = new Server(new ServerConnection(connection));
+
+                this.StatusMessage = "Connecting...";
+                connection.Open();
+                this.StatusMessage = "Connected.  Executing...";
                 
-                Server server = new Server(new ServerConnection());
-                server.ConnectionContext.ExecuteNonQuery(this.ScriptContents);
+                server.ConnectionContext.ExecuteNonQuery(scriptContent);
+
+                this.StatusMessage = "Executed.  Closing connection...";
+                connection.Close();
+                this.StatusMessage = "Connection closed.";
 
                 connection.InfoMessage -= OnInfoMessageUpdated;
             }

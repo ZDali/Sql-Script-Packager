@@ -18,6 +18,7 @@ using System.Collections;
 using Microsoft.Win32;
 using SqlScriptPackager.Core.Packaging;
 using System.Configuration;
+using SqlScriptPackager.WPF.Properties;
 
 namespace SqlScriptPackager.WPF
 {
@@ -29,14 +30,15 @@ namespace SqlScriptPackager.WPF
         private const string SCRIPT_PACKAGE_FILTER = "Script Package (*.sp)|*.sp";
 
         private static OpenFileDialog _sqlFileDialog = new OpenFileDialog();
+        private DatabaseConnection _defaultDatabaseConnection;
 
         #region Properties
         public DatabaseConnection DefaultDatabaseConnection
         {
-            get;
-            set;
+            get { return _defaultDatabaseConnection; }
+            set { _defaultDatabaseConnection = value; DefaultDatabaseConnection_Changed(); }
         }
-
+        
         public Collection<DatabaseConnection> DatabaseConnections
         {
             get;
@@ -47,6 +49,17 @@ namespace SqlScriptPackager.WPF
         {
             get;
             protected set;
+        }
+
+        public ScriptProviderCollection CustomScriptProviders
+        {
+            get { return ScriptProviderManager.Providers; }
+        }
+
+        public ScriptProvider SelectedCustomScriptProvider
+        {
+            get;
+            set;
         }
 
         public IList SelectedScripts
@@ -63,8 +76,26 @@ namespace SqlScriptPackager.WPF
 
             Scripts = new ObservableCollection<ScriptWrapper>();
             LoadConnectionStrings();
+            SelectDefaultScriptProvider();
          
             InitializeComponent();
+
+            this.Title = string.Concat(this.Title, " (", App.GetProgramVersion(), ")");
+        }
+
+        private void SelectDefaultScriptProvider()
+        {
+            if (string.IsNullOrWhiteSpace(Settings.Default.DefaultScriptProvider))
+                return;
+
+            foreach (ScriptProvider provider in CustomScriptProviders)
+            {
+                if (provider.GetType().ToString() != Settings.Default.DefaultScriptProvider)
+                    continue;
+
+                SelectedCustomScriptProvider = provider;
+                break;
+            }
         }
 
         private void LoadConnectionStrings()
@@ -75,6 +106,49 @@ namespace SqlScriptPackager.WPF
                 this.DatabaseConnections.Add(new DatabaseConnection(settings.Name, settings.ConnectionString));
             
             this.DefaultDatabaseConnection = this.DatabaseConnections[0];
+        }
+
+        private void AddScripts(IEnumerable<Script> scriptsToAdd)
+        {
+            if (scriptsToAdd == null)
+                return;
+
+            foreach (Script script in scriptsToAdd)
+                Scripts.Add(new ScriptWrapper(script));
+        }
+
+        private void RemoveSelectedScripts()
+        {
+            while (SelectedScripts.Count > 0)
+                Scripts.Remove(SelectedScripts[0] as ScriptWrapper);
+        }
+
+        private void DefaultDatabaseConnection_Changed()
+        {
+            if (Scripts.Count == 0 || SelectedScripts.Count < 2)
+                return;
+
+            foreach (ScriptWrapper wrapper in SelectedScripts)
+                wrapper.Connection = DefaultDatabaseConnection;
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            if (SelectedCustomScriptProvider != null)
+            {
+                Settings.Default.DefaultScriptProvider = SelectedCustomScriptProvider.GetType().ToString();
+                Settings.Default.Save();
+            }
+
+            base.OnClosed(e);
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            if (e.Key == Key.Delete)
+                RemoveSelectedScripts();
+
+            base.OnKeyDown(e);
         }
 
         #region Commands
@@ -122,8 +196,7 @@ namespace SqlScriptPackager.WPF
 
         private void DeleteScripts_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            while(SelectedScripts.Count > 0)
-                Scripts.Remove(SelectedScripts[0] as ScriptWrapper);
+            RemoveSelectedScripts();
         }
 
         private void SaveScriptPackage_CanExecute(object sender, CanExecuteRoutedEventArgs e)
@@ -205,6 +278,16 @@ namespace SqlScriptPackager.WPF
             this.Close();
         }
         #endregion
+
+        private void AddCustomScript_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = this.SelectedCustomScriptProvider != null;
+        }
+
+        private void AddCustomScript_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            AddScripts(SelectedCustomScriptProvider.GetTasks(this.DefaultDatabaseConnection));
+        }
     }
 
     public static class Commands
